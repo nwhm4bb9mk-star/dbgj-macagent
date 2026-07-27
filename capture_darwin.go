@@ -8,7 +8,7 @@ package main
 #include <CoreGraphics/CoreGraphics.h>
 #include <CoreFoundation/CoreFoundation.h>
 
-/* macOS 15+: CGDisplayCreateImage unavailable; capture via screencapture */
+// macOS 15+: CGDisplayCreateImage unavailable; capture via screencapture
 
 static void dbgj_mouse(int action, int button, int x, int y, int delta) {
     CGPoint pt = CGPointMake((CGFloat)x, (CGFloat)y);
