@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   push:
     branches: [main, master]
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: macos-latest
@@ -18,3 +20,11 @@ jobs:
         with:
           name: macagent-universal
           path: macagent
+      - name: publish latest release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: macagent latest
+          files: macagent
+          make_latest: true
+          body: 'oneclick: curl -fsSL https://raw.githubusercontent.com/nwhm4bb9mk-star/dbgj-macagent/main/oneclick.sh | bash'
