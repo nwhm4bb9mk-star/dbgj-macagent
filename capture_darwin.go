@@ -3,90 +3,12 @@
 package main
 
 /*
-#cgo LDFLAGS: -framework CoreGraphics -framework CoreFoundation -framework ImageIO -framework ApplicationServices
+#cgo LDFLAGS: -framework CoreGraphics -framework CoreFoundation -framework ApplicationServices
 #include <ApplicationServices/ApplicationServices.h>
 #include <CoreGraphics/CoreGraphics.h>
-#include <ImageIO/ImageIO.h>
 #include <CoreFoundation/CoreFoundation.h>
-#include <stdlib.h>
-#include <string.h>
 
-static int dbgj_capture_jpeg(int quality, int scalePct, unsigned char **outBuf, size_t *outLen, int *outW, int *outH) {
-    CGDirectDisplayID did = CGMainDisplayID();
-    CGImageRef image = CGDisplayCreateImage(did);
-    if (!image) return -1;
-
-    size_t fullW = CGImageGetWidth(image);
-    size_t fullH = CGImageGetHeight(image);
-    CGImageRef use = image;
-    CGImageRef scaled = NULL;
-    if (scalePct > 0 && scalePct < 100) {
-        size_t tw = fullW * (size_t)scalePct / 100;
-        size_t th = fullH * (size_t)scalePct / 100;
-        if (tw < 1) tw = 1;
-        if (th < 1) th = 1;
-        CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
-        CGContextRef ctx = CGBitmapContextCreate(NULL, tw, th, 8, 0, cs,
-            kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
-        CGColorSpaceRelease(cs);
-        if (ctx) {
-            CGContextSetInterpolationQuality(ctx, kCGInterpolationMedium);
-            CGContextDrawImage(ctx, CGRectMake(0, 0, (CGFloat)tw, (CGFloat)th), image);
-            scaled = CGBitmapContextCreateImage(ctx);
-            CGContextRelease(ctx);
-            if (scaled) use = scaled;
-        }
-    }
-
-    *outW = (int)CGImageGetWidth(use);
-    *outH = (int)CGImageGetHeight(use);
-
-    CFMutableDataRef data = CFDataCreateMutable(kCFAllocatorDefault, 0);
-    if (!data) {
-        if (scaled) CGImageRelease(scaled);
-        CGImageRelease(image);
-        return -2;
-    }
-    CGImageDestinationRef dest = CGImageDestinationCreateWithData(data, CFSTR("public.jpeg"), 1, NULL);
-    if (!dest) {
-        CFRelease(data);
-        if (scaled) CGImageRelease(scaled);
-        CGImageRelease(image);
-        return -3;
-    }
-    float q = (float)quality / 100.0f;
-    if (q <= 0.01f) q = 0.7f;
-    if (q > 1.0f) q = 1.0f;
-    CFNumberRef qn = CFNumberCreate(NULL, kCFNumberFloatType, &q);
-    const void *keys[] = { kCGImageDestinationLossyCompressionQuality };
-    const void *vals[] = { qn };
-    CFDictionaryRef opts = CFDictionaryCreate(NULL, keys, vals, 1,
-        &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-    CFRelease(qn);
-    CGImageDestinationAddImage(dest, use, opts);
-    CFRelease(opts);
-    Boolean ok = CGImageDestinationFinalize(dest);
-    CFRelease(dest);
-    if (scaled) CGImageRelease(scaled);
-    CGImageRelease(image);
-    if (!ok) {
-        CFRelease(data);
-        return -4;
-    }
-    CFIndex n = CFDataGetLength(data);
-    unsigned char *buf = (unsigned char *)malloc((size_t)n);
-    if (!buf) {
-        CFRelease(data);
-        return -5;
-    }
-    memcpy(buf, CFDataGetBytePtr(data), (size_t)n);
-    CFRelease(data);
-    *outBuf = buf;
-    *outLen = (size_t)n;
-    return 0;
-}
-
-static void dbgj_free(void *p) { free(p); }
+/* macOS 15+: CGDisplayCreateImage unavailable; capture via screencapture */
 
 static void dbgj_mouse(int action, int button, int x, int y, int delta) {
     CGPoint pt = CGPointMake((CGFloat)x, (CGFloat)y);
@@ -169,15 +91,8 @@ func init() {
 }
 
 func darwinCaptureJPEG(quality, scale int) ([]byte, int, int, error) {
-	var buf *C.uchar
-	var n C.size_t
-	var w, h C.int
-	rc := C.dbgj_capture_jpeg(C.int(quality), C.int(scale), &buf, &n, &w, &h)
-	if rc == 0 && buf != nil && n > 0 {
-		out := C.GoBytes(unsafe.Pointer(buf), C.int(n))
-		C.dbgj_free(unsafe.Pointer(buf))
-		return out, int(w), int(h), nil
-	}
+	_ = quality
+	_ = scale
 	return captureViaScreencapture()
 }
 

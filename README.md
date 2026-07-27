@@ -7,7 +7,7 @@
 | 模块 | 实现 |
 |------|------|
 | register / report / ws | 对齐 plmnod |
-| 采屏 | CoreGraphics `CGDisplayCreateImage` → JPEG；失败回退 `screencapture` |
+| 采屏 | `screencapture`（macOS 15+ 无 CGDisplayCreateImage；须屏幕录制） |
 | 键鼠 | `CGEventPost`；键盘兼容前端 Windows VK |
 | 安装 | `install-mac.sh` + LaunchAgent |
 | 编包 | `build-universal.sh` / `.github/workflows/macagent-universal.yml` |
